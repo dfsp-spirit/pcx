@@ -7,6 +7,8 @@ The PCX (Picture Exchange) format is an old bitmap image format that is compress
 
 ## Package API
 
+Not ready yet, this is WIP.
+
     # read array with dim = width x height x channels:
     pcx = read.pcx(filepath);
 
