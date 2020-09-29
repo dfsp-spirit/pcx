@@ -133,7 +133,13 @@ read.pcx <- function(filepath, hdr = TRUE) {
   return(pcx);
 }
 
+
 #' @title S3 print function for pcx image.
+#'
+#' @param x a pcx instance.
+#'
+#' @param ... extra args, not used.
+#'
 #' @export
 print.pcx <- function(x, ...) {
   cat(sprintf("PCX bitmap image, dimension %d x %d pixels, %d channels.\n", x$header$width, x$header$height, x$header$num_channels));

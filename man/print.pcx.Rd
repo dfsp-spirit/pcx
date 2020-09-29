@@ -6,6 +6,11 @@
 \usage{
 \method{print}{pcx}(x, ...)
 }
+\arguments{
+\item{x}{a pcx instance.}
+
+\item{...}{extra args, not used.}
+}
 \description{
 S3 print function for pcx image.
 }
