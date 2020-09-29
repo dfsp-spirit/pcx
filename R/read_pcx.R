@@ -1,7 +1,5 @@
 
 
-# pcxf = '~/data/q2_pak/models/items/quaddama/skin.pcx';
-# pcx = read.pcx(pcxf);
 #' @title Read bitmap file in PCX format.
 #'
 #' @param filepath character string, path to the file including extension
@@ -9,6 +7,13 @@
 #' @param hdr logical, whether to return full list with header
 #'
 #' @return array with color data, or pcx instance (named list) if `hdr` is `TRUE`
+#'
+#' @examples
+#' \dontrun{
+#'    pcxf = '~/data/q2_pak/models/items/quaddama/skin.pcx';
+#'    pcx = read.pcx(pcxf);
+#'    image(pcx$colors);
+#' }
 #'
 #' @export
 read.pcx <- function(filepath, hdr = TRUE) {
@@ -49,7 +54,7 @@ read.pcx <- function(filepath, hdr = TRUE) {
   header$width = img_width;
   header$height = img_height;
 
-  cat(sprintf("img_dim = %d x %d\n", img_width, img_height));
+  #cat(sprintf("img_dim = %d x %d\n", img_width, img_height));
 
   pcx$header = header;
 
@@ -116,9 +121,7 @@ read.pcx <- function(filepath, hdr = TRUE) {
     # apply palette
     if(dim(img_data)[3] == 1L) {
       # only 1 channel, use palette.
-      palette_hexstring = grDevices::rgb(pcx$palette, maxColorValue = 255L);
-      pcx$colors = palette_hexstring[pcx$data[,,1]];
-      pcx$colors = matrix(pcx$colors, nrow = img_height, ncol = img_width);
+      pcx$colors = matrix(pcx$palette[drop(img_data)], nrow = pcx$header$height, byrow = FALSE);
     }
 
   } else {
@@ -130,6 +133,37 @@ read.pcx <- function(filepath, hdr = TRUE) {
   return(pcx);
 }
 
+#' @title S3 print function for pcx image.
+#' @export
 print.pcx <- function(x, ...) {
   cat(sprintf("PCX bitmap image, dimension %d x %d pixels, %d channels.\n", x$header$width, x$header$height, x$header$num_channels));
+
+  str_encoding_type = "INVALID";
+  if(x$header$encoding_type == 1L) {
+    str_encoding_type = 'runlength';
+  } else if(x$header$encoding_type == 2L) {
+    str_encoding_type = 'none';
+  }
+
+
+  is_indexed = FALSE;
+  if(x$header$num_channels == 1L) {
+    if(x$header$bitpix %in% c(4L, 8L)) {
+      is_indexed = TRUE;
+    }
+  }
+
+  if(is_indexed) {
+    if(x$header$palette_mode == 1L) {
+      str_palette_mode = "color/monochrome";
+    } else if(x$header$palette_mode == 2L) {
+      str_palette_mode = "grayscale";
+    } else {
+      str_palette_mode = "INVALID";
+    }
+    cat(sprintf("Bits per pixel=%d, indexed with %s palette: %d different colors possible. Encoding = %s.\n", x$header$bitpix, str_palette_mode, (2 ** x$header$bitpix), str_encoding_type));
+  } else {
+    cat(sprintf("Bits per pixel=%d, not indexed: %d different colors possible. Encoding = %s.\n", x$header$bitpix, (2 ** x$header$bitpix), str_encoding_type));
+  }
+
 }

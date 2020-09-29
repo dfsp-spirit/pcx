@@ -17,3 +17,11 @@ array with color data, or pcx instance (named list) if `hdr` is `TRUE`
 \description{
 Read bitmap file in PCX format.
 }
+\examples{
+\dontrun{
+   pcxf = '~/data/q2_pak/models/items/quaddama/skin.pcx';
+   pcx = read.pcx(pcxf);
+   image(pcx$colors);
+}
+
+}
