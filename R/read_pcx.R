@@ -49,11 +49,13 @@ read.pcx <- function(filepath, hdr = TRUE) {
   header$width = img_width;
   header$height = img_height;
 
+  cat(sprintf("img_dim = %d x %d\n", img_width, img_height));
+
   pcx$header = header;
 
   img_num_pixels = img_width * img_height;
   img_num_values = img_num_pixels * header$num_channels;
-  img_data = array(rep(NA, img_num_values), dim = c(img_width, img_height, header$num_channels));
+  img_data = array(rep(NA, img_num_values), dim = c(img_height, img_width, header$num_channels));
 
   scan_line_num_bytes = header$num_channels * header$bytes_per_channels_line;
   bb = 8L;
@@ -65,9 +67,12 @@ read.pcx <- function(filepath, hdr = TRUE) {
 
   # Read and decompress color data
   for(i in 1:img_height) {
+    cat(sprintf("Scanning image line %d of %d.\n", i, img_height));
     for(j in 1:header$num_channels) {
+      cat(sprintf(" * Scanning channel %d of %d.\n", j, header$num_channels));
       row_pixel_index = 1L;
       for(k in 1:header$bytes_per_channels_line) {
+        cat(sprintf(" *   Scanning byte %d of %d.\n", k, header$bytes_per_channels_line));
         raw_value = readBin(fh, integer(), n = 1L, size = 1L, signed = FALSE);
         if(raw_value > 192L) { # repeat
           repeat_times = raw_value - 192L;
@@ -76,14 +81,19 @@ read.pcx <- function(filepath, hdr = TRUE) {
           if(row_pixel_index <= img_width) { # in image data
             if(repeat_times > 0L) {
               for(l in 1:repeat_times) {
-                img_data[i, row_pixel_index, j] = repeat_color;
-                row_pixel_index = row_pixel_index + 1L;
+                if(row_pixel_index <= img_width) { # in image data
+                  cat(sprintf(" *    - In Repeat: Set %d pixels to %d.\n", repeat_times, repeat_color));
+                  img_data[i, row_pixel_index, j] = repeat_color;
+                  row_pixel_index = row_pixel_index + 1L;
+                }
               }
             }
           }
         } else { # low value: direct color
           if(row_pixel_index <= img_width) { # in image data
+            cat(sprintf("l%d,c%d: *    - Set 1 pixel (#%d of %d) to %d.\n", i, j, row_pixel_index, img_width, raw_value));
             img_data[i, row_pixel_index, j] = raw_value;
+            row_pixel_index = row_pixel_index + 1L;
           }
         }
       }
