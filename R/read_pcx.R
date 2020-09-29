@@ -67,12 +67,12 @@ read.pcx <- function(filepath, hdr = TRUE) {
 
   # Read and decompress color data
   for(i in 1:img_height) {
-    cat(sprintf("Scanning image line %d of %d.\n", i, img_height));
+    #cat(sprintf("Scanning image line %d of %d.\n", i, img_height));
     for(j in 1:header$num_channels) {
-      cat(sprintf(" * Scanning channel %d of %d.\n", j, header$num_channels));
+      #cat(sprintf(" * Scanning channel %d of %d.\n", j, header$num_channels));
       row_pixel_index = 1L;
       for(k in 1:header$bytes_per_channels_line) {
-        cat(sprintf(" *   Scanning byte %d of %d.\n", k, header$bytes_per_channels_line));
+        #cat(sprintf(" *   Scanning byte %d of %d.\n", k, header$bytes_per_channels_line));
         raw_value = readBin(fh, integer(), n = 1L, size = 1L, signed = FALSE);
         if(raw_value > 192L) { # repeat
           repeat_times = raw_value - 192L;
@@ -82,7 +82,7 @@ read.pcx <- function(filepath, hdr = TRUE) {
             if(repeat_times > 0L) {
               for(l in 1:repeat_times) {
                 if(row_pixel_index <= img_width) { # in image data
-                  cat(sprintf(" *    - In Repeat: Set %d pixels to %d.\n", repeat_times, repeat_color));
+                  #cat(sprintf(" *    - In Repeat: Set %d pixels to %d.\n", repeat_times, repeat_color));
                   img_data[i, row_pixel_index, j] = repeat_color;
                   row_pixel_index = row_pixel_index + 1L;
                 }
@@ -91,7 +91,7 @@ read.pcx <- function(filepath, hdr = TRUE) {
           }
         } else { # low value: direct color
           if(row_pixel_index <= img_width) { # in image data
-            cat(sprintf("l%d,c%d: *    - Set 1 pixel (#%d of %d) to %d.\n", i, j, row_pixel_index, img_width, raw_value));
+            #cat(sprintf("l%d,c%d: *    - Set 1 pixel (#%d of %d) to %d.\n", i, j, row_pixel_index, img_width, raw_value));
             img_data[i, row_pixel_index, j] = raw_value;
             row_pixel_index = row_pixel_index + 1L;
           }
@@ -112,6 +112,15 @@ read.pcx <- function(filepath, hdr = TRUE) {
       }
     }
     pcx$palette = palette;
+
+    # apply palette
+    if(dim(img_data)[3] == 1L) {
+      # only 1 channel, use palette.
+      palette_hexstring = grDevices::rgb(pcx$palette, maxColorValue = 255L);
+      pcx$colors = palette_hexstring[pcx$data[,,1]];
+      pcx$colors = matrix(pcx$colors, nrow = img_height, ncol = img_width);
+    }
+
   } else {
     pcx$header$has_palette_at_end = FALSE;
   }
