@@ -13,6 +13,8 @@
 #'    pcxf = '~/data/q2_pak/models/items/quaddama/skin.pcx';
 #'    pcx = read.pcx(pcxf);
 #'    image(pcx$colors);
+#'    # show palette:
+#'    plot(1:256, col=rgb(pcx$palette, maxColorValue = 255))
 #' }
 #'
 #' @export
@@ -31,7 +33,7 @@ read.pcx <- function(filepath, hdr = TRUE) {
   }
   header$painbrush_version = readBin(fh, integer(), n = 1, size = 1, endian = endian);
   header$encoding_type = readBin(fh, integer(), n = 1, size = 1, endian = endian); # 0 = none, 1 = runlength enc.
-  header$bitpix = readBin(fh, integer(), n = 1, size = 1, endian = endian); # bits per pixel, defines number of possible colors in image. 1 = 2, 2 = 4, 3 = 16, 4 = 256.
+  header$bitpix = readBin(fh, integer(), n = 1, size = 1, endian = endian); # bits per pixel, defines number of possible colors in image. 1 = 2, 2 = 4, 4 = 16, 8 = 256.
 
   header$minx = readBin(fh, integer(), n = 1, size = 2, endian = endian);
   header$miny = readBin(fh, integer(), n = 1, size = 2, endian = endian);
@@ -111,8 +113,8 @@ read.pcx <- function(filepath, hdr = TRUE) {
   if(palette_check == 12L) {
     pcx$header$has_palette_at_end = TRUE;
     palette = array(rep(0L, (256 * 4L)), dim = c(256L, 4L));
-    for(i in 1:256) {
-      for(j in 1:3) {  # the 4th entry is 'reserved', it is NOT to be read from the file.
+    for(i in 1:3) {
+      for(j in 1:256) {  # the 4th entry is 'reserved', it is NOT to be read from the file.
         palette[i,j] = readBin(fh, integer(), n = 1L, size = 1L, signed = FALSE);
       }
     }
