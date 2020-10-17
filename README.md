@@ -12,6 +12,9 @@ Not ready yet, this is WIP. Here is the current idea:
     # read an indexed PCX image with a 256 colors palette from file at filepath:
     pcx = pcx::read.pcx(filepath);
 
+    # print information from the PCX header
+    pcx;
+
     # show the image
     image(pcx$colors);
 
