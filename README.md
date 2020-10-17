@@ -10,13 +10,13 @@ The PCX (Picture Exchange) format is an old bitmap image format that is compress
 Not ready yet, this is WIP. Here is the current idea:
 
     # read an indexed PCX image with a 256 colors palette from file at filepath:
-    pcx = read.pcx(filepath);
+    pcx = pcx::read.pcx(filepath);
 
     # show the image
     image(pcx$colors);
 
     # show the palette:
-    # plot(1:256, col=rgb(pcx$palette, maxColorValue = 255))
+    plot(1:256, col=rgb(pcx$palette, maxColorValue = 255));
 
 
 ## References
