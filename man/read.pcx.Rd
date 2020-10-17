@@ -4,12 +4,14 @@
 \alias{read.pcx}
 \title{Read bitmap file in PCX format.}
 \usage{
-read.pcx(filepath, hdr = TRUE)
+read.pcx(filepath, hdr = TRUE, hdr_only = FALSE)
 }
 \arguments{
 \item{filepath}{character string, path to the file including extension}
 
 \item{hdr}{logical, whether to return full list with header}
+
+\item{hdr_only}{logical, whether to read only the header}
 }
 \value{
 array with color data, or pcx instance (named list) if `hdr` is `TRUE`
@@ -22,6 +24,8 @@ Read bitmap file in PCX format.
    pcxf = '~/data/q2_pak/models/items/quaddama/skin.pcx';
    pcx = read.pcx(pcxf);
    image(pcx$colors);
+   # show palette:
+   plot(1:256, col=rgb(pcx$palette, maxColorValue = 255))
 }
 
 }

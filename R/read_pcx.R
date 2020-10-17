@@ -6,6 +6,8 @@
 #'
 #' @param hdr logical, whether to return full list with header
 #'
+#' @param hdr_only logical, whether to read only the header
+#'
 #' @return array with color data, or pcx instance (named list) if `hdr` is `TRUE`
 #'
 #' @examples
@@ -18,7 +20,7 @@
 #' }
 #'
 #' @export
-read.pcx <- function(filepath, hdr = TRUE) {
+read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   fh = file(filepath, "rb");
   on.exit({ close(fh) });
 
@@ -58,6 +60,12 @@ read.pcx <- function(filepath, hdr = TRUE) {
 
   #cat(sprintf("img_dim = %d x %d\n", img_width, img_height));
 
+  class(header) = c(class(header), 'pcxheader');
+
+  if(hdr_only) {
+    return(header);
+  }
+
   pcx$header = header;
 
   img_num_pixels = img_width * img_height;
@@ -67,20 +75,25 @@ read.pcx <- function(filepath, hdr = TRUE) {
   scan_line_num_bytes = header$num_channels * header$bytes_per_channels_line;
   bb = 8L;
   if(scan_line_num_bytes %% bb != 0L) {
+    scan_line_num_bytes_orig = scan_line_num_bytes;
     scan_line_num_bytes = ((scan_line_num_bytes / bb) + 1L) * bb; # lines are padded to next full byte.
+    cat(sprintf("Padding line: from %d to %d.\n", scan_line_num_bytes_orig, scan_line_num_bytes));
   }
 
   seek(fh, where = 128, origin = "start");
 
   # Read and decompress color data
   for(i in 1:img_height) {
-    #cat(sprintf("Scanning image line %d of %d.\n", i, img_height));
+    cat(sprintf("Scanning image line %d of %d.\n", i, img_height));
     for(j in 1:header$num_channels) {
-      #cat(sprintf(" * Scanning channel %d of %d.\n", j, header$num_channels));
+      cat(sprintf(" * Scanning channel %d of %d [line %d of %d].\n", j, header$num_channels, i, img_height));
       row_pixel_index = 1L;
       for(k in 1:header$bytes_per_channels_line) {
-        #cat(sprintf(" *   Scanning byte %d of %d.\n", k, header$bytes_per_channels_line));
+        cat(sprintf(" *   Scanning byte %d of %d [channel %d of %d, line %d of %d].\n", k, header$bytes_per_channels_line, j, header$num_channels, i, img_height));
         raw_value = readBin(fh, integer(), n = 1L, size = 1L, signed = FALSE);
+        if(length(raw_value) < 1L) {
+          stop(sprintf("Reached end of file, but expected more data at byte %d of %d [channel %d of %d, line %d of %d].\n", k, header$bytes_per_channels_line, j, header$num_channels, i, img_height));
+        }
         if(raw_value > 192L) { # repeat
           repeat_times = raw_value - 192L;
           repeat_color = readBin(fh, integer(), n = 1L, size = 1L, signed = FALSE);
@@ -89,7 +102,7 @@ read.pcx <- function(filepath, hdr = TRUE) {
             if(repeat_times > 0L) {
               for(l in 1:repeat_times) {
                 if(row_pixel_index <= img_width) { # in image data
-                  #cat(sprintf(" *    - In Repeat: Set %d pixels to %d.\n", repeat_times, repeat_color));
+                  cat(sprintf(" *    - In Repeat: Set %d pixels to %d.\n", repeat_times, repeat_color));
                   img_data[i, row_pixel_index, j] = repeat_color;
                   row_pixel_index = row_pixel_index + 1L;
                 }
@@ -98,7 +111,7 @@ read.pcx <- function(filepath, hdr = TRUE) {
           }
         } else { # low value: direct color
           if(row_pixel_index <= img_width) { # in image data
-            #cat(sprintf("l%d,c%d: *    - Set 1 pixel (#%d of %d) to %d.\n", i, j, row_pixel_index, img_width, raw_value));
+            cat(sprintf("line %d, channel %d: *    - Set 1 pixel (#%d of %d) to %d. [byte %d of %d per channel]\n", i, j, row_pixel_index, img_width, raw_value, k, header$bytes_per_channels_line));
             img_data[i, row_pixel_index, j] = raw_value;
             row_pixel_index = row_pixel_index + 1L;
           }
@@ -136,6 +149,20 @@ read.pcx <- function(filepath, hdr = TRUE) {
 }
 
 
+#' @title S3 print function for pcx header.
+#'
+#' @param x a pcx.header instance.
+#'
+#' @param ... extra args, not used.
+#'
+#' @export
+print.pcxheader <- function(x, ...) {
+  pcx = list('data' = NULL, 'header'=x);
+  class(pcx) = c(class(pcx), 'pcx');
+  print(pcx);
+}
+
+
 #' @title S3 print function for pcx image.
 #'
 #' @param x a pcx instance.
@@ -167,9 +194,9 @@ print.pcx <- function(x, ...) {
     } else if(x$header$palette_mode == 2L) {
       str_palette_mode = "grayscale";
     } else {
-      str_palette_mode = "INVALID";
+      str_palette_mode = "unknown";
     }
-    cat(sprintf("Bits per pixel=%d, indexed with %s palette: %d different colors possible. Encoding = %s.\n", x$header$bitpix, str_palette_mode, (2 ** x$header$bitpix), str_encoding_type));
+    cat(sprintf("Bits per pixel=%d, indexed (with %s palette type): %d different colors possible. Encoding = %s.\n", x$header$bitpix, str_palette_mode, (2 ** x$header$bitpix), str_encoding_type));
   } else {
     cat(sprintf("Bits per pixel=%d, not indexed: %d different colors possible. Encoding = %s.\n", x$header$bitpix, (2 ** x$header$bitpix), str_encoding_type));
   }
