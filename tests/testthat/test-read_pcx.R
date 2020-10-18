@@ -7,7 +7,13 @@ testthat::test_that("We can read the Quake 2 Quad Damage skin if available.", {
     testthat::skip("Quake 2 Quad Damage skin available");
   }
   pcx = read.pcx(pcxf);
+
   testthat::expect_true(is.matrix(pcx$palette));
+  testthat::expect_equal(length(pcx$palette) / 4L, 256L);
+  testthat::expect_equal(dim(pcx$colors), c(148, 168));
+
+  testthat::expect_equal(pcx$header$bitpix, 8L);
+  testthat::expect_equal(pcx$header$num_channels, 1L);
 })
 
 
