@@ -15,8 +15,8 @@ Not ready yet, this is WIP. Here is the current idea:
     # print information from the PCX header
     pcx;
 
-    # show the image
-    image(pcx$colors);
+    # show the image using 'imager' package
+    plot(imager::as.cimg(pcx$colors));
 
     # show the palette:
     plot(1:nrow(pcx$palette), col=rgb(pcx$palette, maxColorValue = 255));

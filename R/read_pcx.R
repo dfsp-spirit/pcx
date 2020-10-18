@@ -14,9 +14,10 @@
 #' \dontrun{
 #'    pcxf = '~/data/q2_pak/models/items/quaddama/skin.pcx';
 #'    pcx = read.pcx(pcxf);
-#'    image(pcx$colors);
+#'    plot(imager::as.cimg(pcx$colors))
 #'    # show palette:
 #'    plot(1:256, col=rgb(pcx$palette, maxColorValue = 255))
+#'
 #' }
 #'
 #' @export
@@ -68,13 +69,12 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
 
   img_num_pixels = img_width * img_height;
   img_num_values = img_num_pixels * header$num_channels;
-  img_data = array(rep(NA, img_num_values), dim = c(img_height, img_width, header$num_channels));
+  img_data = array(rep(NA, img_num_values), dim = c(img_width, img_height, header$num_channels));
 
   # The following is the length of an UNENCODED scanline in bytes:
   scan_line_num_bytes = header$num_channels * header$bytes_per_channels_line;
 
   bb = 8L;  # padding setting: the byte block size, lines are padded to be a multiple of the bb.
-
   scanline_padding_size = (scan_line_num_bytes * (bb / header$bitpix)) - img_width;
   header$derived$scanline_padding_size = scanline_padding_size;
 
@@ -112,7 +112,7 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
               for(l in 1:repeat_times) {
                 if(row_pixel_index < img_width) { # in image data
                   #cat(sprintf(" *    - In Repeat: Set %d pixels to %d.\n", repeat_times, repeat_color));
-                  img_data[i, row_pixel_index, j] = repeat_color;
+                  img_data[row_pixel_index, i, j] = repeat_color;
                   row_pixel_index = row_pixel_index + 1L;
                 }
               }
@@ -121,7 +121,7 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
         } else { # low value: direct color
           if(row_pixel_index < img_width) { # in image data
             #cat(sprintf("line %d, channel %d: *    - Set 1 pixel (#%d of %d) to %d. [byte %d of %d per channel]\n", i, j, row_pixel_index, img_width, raw_value, k, header$bytes_per_channels_line));
-            img_data[i, row_pixel_index, j] = raw_value;
+            img_data[row_pixel_index, i, j] = raw_value;
             row_pixel_index = row_pixel_index + 1L;
           }
           bytes_expanded_this_line = bytes_expanded_this_line + 1L;
@@ -142,15 +142,17 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
       }
     }
     pcx$palette = palette;
+    pcx$palette_rgb = palette[,1:3];
 
     # apply palette
     if(dim(img_data)[3] == 1L) {
       # only 1 channel, use palette.
-      pcx$colors = matrix(pcx$palette[drop(img_data)], nrow = pcx$header$height, byrow = FALSE);
+      pcx$colors = matrix(pcx$palette[drop(img_data)], nrow = pcx$header$height, byrow = TRUE);
     }
 
   } else {
     pcx$header$has_palette_at_end = FALSE;
+    pcx$colors = img_data;
   }
 
   pcx$data = img_data;
