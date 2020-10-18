@@ -136,8 +136,8 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   if(palette_check == 12L) {
     pcx$header$has_palette_at_end = TRUE;
     palette = array(rep(0L, (256 * 4L)), dim = c(256L, 4L));
-    for(i in 1:3) {
-      for(j in 1:256) {  # the 4th entry is 'reserved', it is NOT to be read from the file.
+    for(i in 1:256) {
+      for(j in 1:3) {  # the 4th entry is 'reserved', it is NOT to be read from the file.
         palette[i,j] = readBin(fh, integer(), n = 1L, size = 1L, signed = FALSE);
       }
     }
