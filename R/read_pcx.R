@@ -59,16 +59,12 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
 
   header$width = img_width;
   header$height = img_height;
+  header$derived = list();
 
   #cat(sprintf("img_dim = %d x %d\n", img_width, img_height));
 
   class(header) = c(class(header), 'pcxheader');
 
-  if(hdr_only) {
-    return(header);
-  }
-
-  pcx$header = header;
 
   img_num_pixels = img_width * img_height;
   img_num_values = img_num_pixels * header$num_channels;
@@ -80,15 +76,15 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   bb = 8L;  # padding setting: the byte block size, lines are padded to be a multiple of the bb.
 
   scanline_padding_size = (scan_line_num_bytes * (bb / header$bitpix)) - img_width;
-  cat(sprintf("scanline_padding_size is '%d'.\n", scanline_padding_size));
+  header$derived$scanline_padding_size = scanline_padding_size;
 
-  if(scan_line_num_bytes %% bb != 0L) {
-    scan_line_num_bytes_orig = scan_line_num_bytes;
-    scan_line_num_bytes = ((scan_line_num_bytes / bb) + 1L) * bb; # lines are padded to next full byte.
-    cat(sprintf("Padding line: from %d to %d.\n", scan_line_num_bytes_orig, scan_line_num_bytes));
+  if(hdr_only) {
+    return(header);
   }
+  pcx$header = header;
 
-  seek(fh, where = 128, origin = "start");
+
+  seek(fh, where = 128L, origin = "start");
 
   # Read and decompress color data
   for(i in 1:img_height) {
