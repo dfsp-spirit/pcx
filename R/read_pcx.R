@@ -48,6 +48,8 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   header$num_channels = readBin(fh, integer(), n = 1, size = 1, endian = endian);
   header$bytes_per_channels_line = readBin(fh, integer(), n = 1, size = 2, endian = endian);
   header$palette_mode = readBin(fh, integer(), n = 1, size = 2, endian = endian); # 1 = color/monochrome, 2=grayscale
+
+  # The next 2 fields are only present for later format versions (painbrush_version >= 4). In earlier versions, the reserved2 field is 4 bytes longer. Check whether they make sense before using them.
   header$screen_size_horizontal = readBin(fh, integer(), n = 1, size = 2, endian = endian); # horizontal screen resolution of source system
   header$screen_size_vertical = readBin(fh, integer(), n = 1, size = 2, endian = endian); # vertical
   header$reserved2 = readBin(fh, integer(), n = 54, size = 1, endian = endian);
@@ -72,8 +74,14 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   img_num_values = img_num_pixels * header$num_channels;
   img_data = array(rep(NA, img_num_values), dim = c(img_height, img_width, header$num_channels));
 
+  # The following is the length of an UNENCODED scanline in bytes:
   scan_line_num_bytes = header$num_channels * header$bytes_per_channels_line;
-  bb = 8L;
+
+  bb = 8L;  # padding setting: the byte block size, lines are padded to be a multiple of the bb.
+
+  scanline_padding_size = (scan_line_num_bytes * (bb / header$bitpix)) - img_width;
+  cat(sprintf("scanline_padding_size is '%d'.\n", scanline_padding_size));
+
   if(scan_line_num_bytes %% bb != 0L) {
     scan_line_num_bytes_orig = scan_line_num_bytes;
     scan_line_num_bytes = ((scan_line_num_bytes / bb) + 1L) * bb; # lines are padded to next full byte.
@@ -112,7 +120,7 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
           }
         } else { # low value: direct color
           if(row_pixel_index <= img_width) { # in image data
-            cat(sprintf("line %d, channel %d: *    - Set 1 pixel (#%d of %d) to %d. [byte %d of %d per channel]\n", i, j, row_pixel_index, img_width, raw_value, k, header$bytes_per_channels_line));
+            #cat(sprintf("line %d, channel %d: *    - Set 1 pixel (#%d of %d) to %d. [byte %d of %d per channel]\n", i, j, row_pixel_index, img_width, raw_value, k, header$bytes_per_channels_line));
             img_data[i, row_pixel_index, j] = raw_value;
             row_pixel_index = row_pixel_index + 1L;
           }
