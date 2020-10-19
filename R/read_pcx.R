@@ -78,6 +78,11 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   scanline_padding_size = (scan_line_num_bytes * (bb / header$bitpix)) - img_width;
   header$derived$scanline_padding_size = scanline_padding_size;
 
+  cat(sprintf("'%s': bitpix = %d,  scanline_padding_size = %d\n", filepath, header$bitpix, scanline_padding_size));
+  if(scanline_padding_size != 0L) {
+    cat(sprintf("'%s': scan_line_num_bytes = %d,  img_width = %d\n", filepath, scan_line_num_bytes, img_width));
+  }
+
   if(hdr_only) {
     return(header);
   }
@@ -99,18 +104,26 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
         raw_value = readBin(fh, integer(), n = 1L, size = 1L, signed = FALSE);
         bytes_read_this_line = bytes_read_this_line + 1L;
         if(length(raw_value) < 1L) {
-          stop(sprintf("Reached end of file, but expected more data at byte %d of %d [channel %d of %d, line %d of %d].\n", bytes_read_this_line, header$bytes_per_channels_line, j, header$num_channels, i, img_height));
+          break; # last line may be shorter.
+          #stop(sprintf("Reached end of file, but expected more data at byte %d of %d [channel %d of %d, line %d of %d].\n", bytes_read_this_line, header$bytes_per_channels_line, j, header$num_channels, i, img_height));
         }
 
         if(raw_value > 192L) { # repeat
           repeat_times = raw_value - 192L;
+          if(repeat_times < 1L) {
+            cat(sprintf("Repeat zero times.\n"));
+          }
           repeat_color = readBin(fh, integer(), n = 1L, size = 1L, signed = FALSE);
+          if(length(repeat_color) < 1L) {
+            break;  # last line may be shorter than bytes_per_channels_line
+            #stop(sprintf("Reached end of file, but expected repeat color at byte %d of %d [channel %d of %d, line %d of %d].\n", bytes_read_this_line, header$bytes_per_channels_line, j, header$num_channels, i, img_height));
+          }
           bytes_read_this_line = bytes_read_this_line + 1L;
           bytes_expanded_this_line = bytes_expanded_this_line + repeat_times;
-          if(row_pixel_index < img_width) { # in image data (as opposed to padding)
+          if(row_pixel_index <= img_width) { # in image data (as opposed to padding)
             if(repeat_times > 0L) {
               for(l in 1:repeat_times) {
-                if(row_pixel_index < img_width) { # in image data
+                if(row_pixel_index <= img_width) { # in image data
                   #cat(sprintf(" *    - In Repeat: Set %d pixels to %d.\n", repeat_times, repeat_color));
                   img_data[row_pixel_index, i, j] = repeat_color;
                   row_pixel_index = row_pixel_index + 1L;
@@ -119,7 +132,7 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
             }
           }
         } else { # low value: direct color
-          if(row_pixel_index < img_width) { # in image data
+          if(row_pixel_index <= img_width) { # in image data
             #cat(sprintf("line %d, channel %d: *    - Set 1 pixel (#%d of %d) to %d. [byte %d of %d per channel]\n", i, j, row_pixel_index, img_width, raw_value, k, header$bytes_per_channels_line));
             img_data[row_pixel_index, i, j] = raw_value;
             row_pixel_index = row_pixel_index + 1L;
