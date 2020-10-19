@@ -4,13 +4,14 @@ Title: Read and Write 'PCX' Bitmap Image Files
 Version: 0.0.1
 Authors@R: person("Tim", "Schäfer", role = c("aut", "cre"), email = "ts+code@rcmd.org", comment = c(ORCID = "0000-0002-3683-8070"))
 Maintainer: Tim Schäfer <ts+code@rcmd.org>
-Description: Read images.
+Description: Read images in Picture Exchange file format.
 License: GPL + file LICENSE
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/dfsp-spirit/pcx
 BugReports: https://github.com/dfsp-spirit/pcx/issues
 Suggests:
+    knitr,
     rmarkdown,
     testthat (>= 2.1.0),
     pkgfilecache
