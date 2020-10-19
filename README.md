@@ -27,3 +27,7 @@ Not ready yet, this is WIP. Here is the current idea:
 * The [PCX spec](http://bespin.org/~qz/pc-gpe/pcx.txt)
 * A general [PCX format description at Wikipedia](https://en.wikipedia.org/wiki/PCX)
 * More details and assembly reading code at the [Shikadi Modding Wiki](http://www.shikadi.net/moddingwiki/PCX_Format). Also checkout the references section.
+
+## Unit tests and CI
+
+[![Build Status](https://travis-ci.org/dfsp-spirit/pcx.svg?branch=master)](https://travis-ci.org/dfsp-spirit/pcx) Travis CI under Linux
