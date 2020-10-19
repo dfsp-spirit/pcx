@@ -28,6 +28,9 @@ Not ready yet, this is WIP. Here is the current idea:
 * A general [PCX format description at Wikipedia](https://en.wikipedia.org/wiki/PCX)
 * More details and assembly reading code at the [Shikadi Modding Wiki](http://www.shikadi.net/moddingwiki/PCX_Format). Also checkout the references section.
 
+
 ## Unit tests and CI
 
 [![Build Status](https://travis-ci.org/dfsp-spirit/pcx.svg?branch=master)](https://travis-ci.org/dfsp-spirit/pcx) Travis CI under Linux
+
+[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/dfsp-spirit/pcx?branch=master&svg=true)](https://ci.appveyor.com/project/dfsp-spirit/pcx) AppVeyor CI under Windows
