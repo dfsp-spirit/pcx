@@ -13,5 +13,6 @@ BugReports: https://github.com/dfsp-spirit/pcx/issues
 Suggests:
     rmarkdown,
     testthat (>= 2.1.0),
+    pkgfilecache
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1
