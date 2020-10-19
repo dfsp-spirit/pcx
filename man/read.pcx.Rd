@@ -23,9 +23,10 @@ Read bitmap file in PCX format.
 \dontrun{
    pcxf = '~/data/q2_pak/models/items/quaddama/skin.pcx';
    pcx = read.pcx(pcxf);
-   image(pcx$colors);
+   plot(imager::as.cimg(pcx$colors))
    # show palette:
    plot(1:256, col=rgb(pcx$palette, maxColorValue = 255))
+
 }
 
 }
