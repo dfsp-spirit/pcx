@@ -38,14 +38,27 @@ testthat::test_that("We can read a PCX file with a 256 color palette.", {
 })
 
 
+testthat::test_that("We can read a PCX file that is not indexed.", {
+
+  # file from https://samples.libav.org/image-samples/pcx/
+  pcxf = system.file('extdata', 'lena.pcx', package = 'pcx', mustWork = TRUE);
+  pcx = read.pcx(pcxf);
+
+  testthat::expect_true(is.matrix(pcx$palette));
+})
+
+
 testthat::test_that("We can convert a PCX file to JPEG format.", {
 
   # file from https://samples.libav.org/image-samples/pcx/
-  pcxf = system.file('extdata', 'BLOOD02.PCX', package = 'pcx', mustWork = TRUE);
+  pcxf = system.file('extdata', 'lena.pcx', package = 'pcx', mustWork = TRUE);
   pcx = read.pcx(pcxf);
 
-  # Check that we get a function:
-  testthat::expect_true(is.matrix(pcx$palette));
+  testthat::expect_true(is.array(pcx$colors));
+
+  # Write as JPEG:
+  lena = tempfile(fileext = '.jpg');
+  jpeg::writeJPEG(pcx$colors/255., target = lena);
 })
 
 

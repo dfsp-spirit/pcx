@@ -139,6 +139,8 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
           }
           bytes_expanded_this_line = bytes_expanded_this_line + 1L;
         }
+
+        cat(sprintf("row_pixel_index=%d, bytes_read_this_line=%d, bytes_expanded_this_line=%d.\n", row_pixel_index, bytes_read_this_line, bytes_expanded_this_line));
       }
     }
   }
