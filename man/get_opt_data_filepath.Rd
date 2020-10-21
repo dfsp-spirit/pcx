@@ -17,3 +17,4 @@ string. The full path to the file in the package cache or the empty string if th
 \description{
 Access a single file from the package cache by its file name.
 }
+\keyword{internal}

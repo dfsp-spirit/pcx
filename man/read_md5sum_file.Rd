@@ -18,3 +18,4 @@ Read md5sum file written by md5sum program.
 \note{
 File names entries must not include whitespace.
 }
+\keyword{internal}

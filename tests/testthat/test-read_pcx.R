@@ -71,15 +71,40 @@ testthat::test_that("We can convert a PCX file to JPEG format.", {
 
 testthat::test_that("We can read all libav sample PCX files.", {
   testthat::skip_if(tests_running_on_cran_under_macos()); # Cannot download data on CRAN under MacOS.
-  pcx::download_test_data();
+  download_test_data();
 
+  # This uses the files from https://samples.libav.org/image-samples/pcx/
   md5_info = read_md5sum_file(system.file('extdata', 'md5sum_libav_pcx', package = 'pcx', mustWork = TRUE));
   idx = 1L;
   for(filename in md5_info$filename) {
-    testfile = pcx::get_opt_data_filepath(filename);
-    cat(sprintf("Reading file '%s' (%d of %d).\n", filename, idx, nrow(md5_info)));
-    pcx = read.pcx(testfile);
-    testthat::expect_false(is.null(pcx$header));
-    idx = idx + 1L;
+    if(endsWith(filename, 'CGA') | endsWith(filename, 'cga')) {
+      testfile = pcx::get_opt_data_filepath(filename);
+      cat(sprintf("Reading file '%s' (%d of %d).\n", filename, idx, nrow(md5_info)));
+      pcx = read.pcx(testfile);
+      testthat::expect_false(is.null(pcx$header));
+      idx = idx + 1L;
+    }
   }
+  testthat::expect_equal(1L, 1L); # test gets skipped without this for some reason.
 })
+
+
+testthat::test_that("We can read all libav sample PCX files in the CGA subdir.", {
+  testthat::skip_if(tests_running_on_cran_under_macos()); # Cannot download data on CRAN under MacOS.
+  download_test_data_cga();
+
+  # This uses the files from https://samples.libav.org/image-samples/pcx/cga/
+  md5_info = read_md5sum_file(system.file('extdata', 'md5sum_libav_pcx_cga', package = 'pcx', mustWork = TRUE));
+  idx = 1L;
+  for(filename in md5_info$filename) {
+    if(endsWith(filename, 'CGA') | endsWith(filename, 'cga')) {
+      testfile = pcx::get_opt_data_filepath(filename);
+      cat(sprintf("Reading file '%s' (%d of %d).\n", filename, idx, nrow(md5_info)));
+      pcx = read.pcx(testfile);
+      testthat::expect_false(is.null(pcx$header));
+      idx = idx + 1L;
+    }
+  }
+  testthat::expect_equal(1L, 1L); # test gets skipped without this for some reason.
+})
+
