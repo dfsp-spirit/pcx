@@ -34,8 +34,9 @@ The returned `pcx` object in the example code above is a named list with the fol
 
 * `colors`: this is what you want, the image. An array of integers in range 0-255 representing RGB colors, with three dimensions in the following order: width, height, channels. The channels are in order R, G, B. If the image is indexed, this has been created by applying the `palette` to the `data` (see below).
 * `header`: named list, containing the header fields and values from the file.
-* `palette`: the VGA image palette, a matrix (for images with 1 channel) or an array of RGB colors. This is `NULL` if the file does not contain a VGA palette. Note that for very old PCX files (CGA/EGA), the `header` contains a field with the palette, and this is `NULL`. Support for these files is currently very limited.
-* `data`: the raw image data, as read from the file. The palette has not been applied to this. Usually not needed, but you could use this to apply a custom palette to the image data.
+* `palette`: the optional VGA image palette (256 fixed colors), a vector of intensities (for images with 1 channel) or a matrix of RGB colors (for multi-channel images). This is `NULL` if the file does not contain a VGA palette. Note that for very old PCX files (CGA/EGA with 16 fixed colors), the palette is stored in the `header$ega_palette` field instead.
+* `data`: the raw image data, as read from the file. The palette has *not* been applied to this. Usually not needed, but you could use this to apply a custom palette to the image data.
+
 
 ## References
 
