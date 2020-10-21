@@ -50,7 +50,7 @@ testthat::test_that("We can read a PCX file that is not indexed.", {
   testthat::expect_true(is.null(pcx$palette));
 })
 
-
+#' @importFrom jpeg writeJPEG
 testthat::test_that("We can convert a PCX file to JPEG format.", {
 
   if( ! requireNamespace("jpeg", quietly = TRUE)) {
