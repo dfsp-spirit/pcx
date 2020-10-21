@@ -7,20 +7,35 @@ The PCX (Picture Exchange) format is an old bitmap image format that is compress
 
 ## Package API
 
-Not ready yet, this is WIP. Here is the current idea:
+This is work in progress, but here is the current idea:
 
-    # read an indexed PCX image from a file at filepath:
+    # Read a PCX image from a file at filepath:
     pcx = pcx::read.pcx(filepath);
 
     # print information from the PCX header
     pcx;
 
+
+Here are some ideas on what to do with your image:
+
     # show the image using 'imager' package
     plot(imager::as.cimg(pcx$colors));
 
-    # show the palette:
+    # plot the palette (indexed images with VGA palette only):
     plot(1:nrow(pcx$palette), col=rgb(pcx$palette, maxColorValue = 255));
 
+    # export the image to JPEG format (requires the 'jpeg' package):
+    jpeg::writeJPEG(pcx$colors/255., target = '~/myimage.jpg');
+
+
+### Return value details
+
+The returned `pcx` object in the example code above is a named list with the following entries:
+
+* `colors`: this is what you want, the image. An array of integers in range 0-255 representing RGB colors, with three dimensions in the following order: width, height, channels. The channels are in order R, G, B. If the image is indexed, this has been created by applying the `palette` to the `data` (see below).
+* `header`: named list, containing the header fields and values from the file.
+* `palette`: the VGA image palette, a matrix (for images with 1 channel) or an array of RGB colors. This is `NULL` if the file does not contain a VGA palette. Note that for very old PCX files (CGA/EGA), the `header` contains a field with the palette, and this is `NULL`. Support for these files is currently very limited.
+* `data`: the raw image data, as read from the file. The palette has not been applied to this. Usually not needed, but you could use this to apply a custom palette to the image data.
 
 ## References
 
