@@ -44,7 +44,10 @@ testthat::test_that("We can read a PCX file that is not indexed.", {
   pcxf = system.file('extdata', 'lena.pcx', package = 'pcx', mustWork = TRUE);
   pcx = read.pcx(pcxf);
 
-  testthat::expect_true(is.matrix(pcx$palette));
+  testthat::expect_true(is.array(pcx$colors));
+  testthat::expect_equal(dim(pcx$colors), c(512, 512, 3));
+
+  testthat::expect_true(is.null(pcx$palette));
 })
 
 

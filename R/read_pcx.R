@@ -135,12 +135,12 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
           if(row_pixel_index <= img_width) { # in image data
             #cat(sprintf("line %d, channel %d: *    - Set 1 pixel (#%d of %d) to %d. [byte %d of %d per channel]\n", i, j, row_pixel_index, img_width, raw_value, k, header$bytes_per_channels_line));
             img_data[row_pixel_index, i, j] = raw_value;
-            row_pixel_index = row_pixel_index + 1L;
           }
+          row_pixel_index = row_pixel_index + 1L;
           bytes_expanded_this_line = bytes_expanded_this_line + 1L;
         }
 
-        cat(sprintf("row_pixel_index=%d, bytes_read_this_line=%d, bytes_expanded_this_line=%d.\n", row_pixel_index, bytes_read_this_line, bytes_expanded_this_line));
+        #cat(sprintf("row_pixel_index=%d, bytes_read_this_line=%d, bytes_expanded_this_line=%d.\n", row_pixel_index, bytes_read_this_line, bytes_expanded_this_line));
       }
     }
   }
@@ -223,9 +223,9 @@ print.pcx <- function(x, ...) {
     } else {
       str_palette_mode = "unknown";
     }
-    cat(sprintf("Bits per pixel=%d, indexed (with %s palette type): %d different colors possible. Encoding = %s.\n", x$header$bitpix, str_palette_mode, (2 ** x$header$bitpix), str_encoding_type));
+    cat(sprintf("Bits per pixel=%d, indexed (with %s palette type): %d different colors possible. Encoding = %s.\n", x$header$bitpix, str_palette_mode, (2 * x$header$num_channels) ** x$header$bitpix, str_encoding_type));
   } else {
-    cat(sprintf("Bits per pixel=%d, not indexed: %d different colors possible. Encoding = %s.\n", x$header$bitpix, (2 ** x$header$bitpix), str_encoding_type));
+    cat(sprintf("Bits per pixel=%d, not indexed: %d different colors possible. Encoding = %s.\n", x$header$bitpix, (2 * x$header$num_channels) ** x$header$bitpix, str_encoding_type));
   }
 
 }
