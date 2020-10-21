@@ -162,7 +162,7 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
     # apply palette
     if(dim(img_data)[3] == 1L) {
       # only 1 channel, use palette.
-      pcx$colors = matrix(pcx$palette[drop(img_data)], nrow = pcx$header$height, byrow = TRUE);
+      pcx$colors = matrix(pcx$palette_rgb[drop(img_data)], nrow = pcx$header$height, byrow = TRUE);
     }
 
   } else {

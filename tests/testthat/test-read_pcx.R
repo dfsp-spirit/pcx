@@ -53,6 +53,10 @@ testthat::test_that("We can read a PCX file that is not indexed.", {
 
 testthat::test_that("We can convert a PCX file to JPEG format.", {
 
+  if( ! requireNamespace("jpeg", quietly = TRUE)) {
+    testthat::skip("The 'jpeg' package needs to be installed for this test.");
+  }
+
   # file from https://samples.libav.org/image-samples/pcx/
   pcxf = system.file('extdata', 'lena.pcx', package = 'pcx', mustWork = TRUE);
   pcx = read.pcx(pcxf);
@@ -60,8 +64,8 @@ testthat::test_that("We can convert a PCX file to JPEG format.", {
   testthat::expect_true(is.array(pcx$colors));
 
   # Write as JPEG:
-  lena = tempfile(fileext = '.jpg');
-  jpeg::writeJPEG(pcx$colors/255., target = lena);
+  lena_jpg = tempfile(fileext = '.jpg');
+  jpeg::writeJPEG(pcx$colors/255., target = lena_jpg);
 })
 
 
