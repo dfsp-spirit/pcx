@@ -7,7 +7,7 @@ The PCX (Picture Exchange) format is an old bitmap image format that is compress
 
 ## Package API
 
-This is work in progress, but here is the current idea:
+This is work in progress, but here is the current state:
 
     # Read a PCX image from a file at filepath:
     pcx = pcx::read.pcx(filepath);
@@ -34,8 +34,15 @@ The returned `pcx` object in the example code above is a named list with the fol
 
 * `colors`: this is what you want, the image. An array of integers in range 0-255 representing RGB colors, with three dimensions in the following order: width, height, channels. The channels are in order R, G, B. If the image is indexed, this has been created by applying the `palette` to the `data` (see below).
 * `header`: named list, containing the header fields and values from the file.
-* `palette`: the optional VGA image palette (256 fixed colors), a vector of intensities (for images with 1 channel) or a matrix of RGB colors (for multi-channel images). This is `NULL` if the file does not contain a VGA palette. Note that for very old PCX files (CGA/EGA with 16 fixed colors), the palette is stored in the `header$ega_palette` field instead.
+* `palette`: the optional VGA image palette (256 fixed colors), a vector of intensities (for images with 1 channel) or a matrix of RGB colors (for multi-channel images). This is `NULL` if the file does not contain a VGA palette. Note that for very old PCX files (CGA/EGA with <= 16 fixed colors), the palette is stored in the `header$ega_palette` field instead.
 * `data`: the raw image data, as read from the file. The palette has *not* been applied to this. Usually not needed, but you could use this to apply a custom palette to the image data.
+
+
+### A note on the interpretation of indexed PCX color data
+
+The interpretation of indexed PCX images, especially in CGA/EGA mode, is not well defined and thus the same image may be displayed differently by different viewers, as explained in the references. If the `colors` returned by this package do not match your expectations, feel free to apply your own interpretation using the `header` information and `data`.
+
+However, if you know the PCX specs well and feel confident enough that the interpretation of this package is definitely *wrong* for a file, please open an issue and attach the file together with a detailed description of your expectations. If possible, please include a screenshot of the rendering of the image in some standard software that matches your expectations.
 
 
 ## References
