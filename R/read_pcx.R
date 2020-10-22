@@ -34,7 +34,7 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   if(header$ident != 10L) {
     stop("File not in PCX format.");
   }
-  header$painbrush_version = readBin(fh, integer(), n = 1, size = 1, endian = endian);
+  header$paintbrush_version = readBin(fh, integer(), n = 1, size = 1, endian = endian);
   header$encoding_type = readBin(fh, integer(), n = 1, size = 1, endian = endian); # 0 = none, 1 = runlength enc.
   header$bitpix = readBin(fh, integer(), n = 1, size = 1, endian = endian); # bits per pixel, defines number of possible colors in image. 1 = 2, 2 = 4, 4 = 16, 8 = 256.
 
@@ -50,7 +50,7 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   header$bytes_per_channels_line = readBin(fh, integer(), n = 1, size = 2, endian = endian);
   header$palette_mode = readBin(fh, integer(), n = 1, size = 2, endian = endian); # 1 = color/monochrome, 2=grayscale
 
-  # The next 2 fields are only present for later format versions (painbrush_version >= 4). In earlier versions, the reserved2 field is 4 bytes longer. Check whether they make sense before using them.
+  # The next 2 fields are only present for later format versions (paintbrush_version >= 4). In earlier versions, the reserved2 field is 4 bytes longer. Check whether they make sense before using them.
   header$screen_size_horizontal = readBin(fh, integer(), n = 1, size = 2, endian = endian); # horizontal screen resolution of source system
   header$screen_size_vertical = readBin(fh, integer(), n = 1, size = 2, endian = endian); # vertical
   header$reserved2 = readBin(fh, integer(), n = 54, size = 1, endian = endian);
@@ -176,6 +176,101 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
 }
 
 
+#' @title Compute the colors for the CGA/EGA palette from the header.
+#'
+#' @param pcheader a PCX header instance
+#'
+#' @param gfx_mode the graphics mode, one of 'cga', 'ega', or 'auto' to guess the mode from the data.
+#'
+#' @param raw_data the image data, optional. Can be used to check the validity of the computed palette if given.
+#'
+#' @return integer matrix, the palette colors.
+#' @export
+compute.header.palette.colors <- function(pcxheader, gfx_mode = 'cga', raw_data = NULL) {
+
+  ega = ega.palette.default16();
+  cga_palette0_dark_ega_indices = c(2L, 4L, 6L);
+  cga_palette0_bright_ega_indices = c(10L, 12L, 14L);
+  cga_palette1_dark_ega_indices = c(3L, 5L, 7L);
+  cga_palette1_bright_ega_indices = c(11L, 13L, 15L);
+  #cga_palette2_dark_ega_indices = c(3L, 4L, 7L);   # unoffical palette 2, currently not used. see colorburst.
+  #cga_palette2_bright_ega_indices = c(11L, 12L, 15L);
+
+  if(gfx_mode == 'cga') {
+    # The upper 4 bits of the first byte define the palette background color (its first color).
+    # The integer value represented by them is an index into the default EGA palette. The other 2 bytes of
+    # the first triplet are ignored.
+    background_color_bytes = pcxheader$ega_palette[1:3];
+    default_ega_palette_index = bitwShiftR(background_color_bytes[1], 4L);
+    palette_background_color = ega.palette.default16()$palette[, default_ega_palette_index];
+    num_colors_max = (2 * pcxheader$num_channels) ** pcxheader$bitpix;
+    if(num_colors_max == 2L) {
+      return(cbind(palette_background_color, c(ega.palette.default16()$palette[, 1L]))); # set 2nd color to black.
+    } else { # 4 color mode.
+      if(pcxheader$palette_mode > 0L) {
+        # file uses the old way of setting status bits.
+        status_byte = pcxheader$ega_palette[4];
+        #bit_colorburst = as.integer(intToBits(status_byte)[8]);  # we ignore colorburst, see references.
+        bit_palette = as.integer(intToBits(status_byte)[7]);
+        bit_intensity = as.integer(intToBits(status_byte)[6]);
+        if(bit_palette == 0L) {
+         # use palette 0
+          if(bit_intensity == 1L) {
+            return(ega$colors[,cga_palette0_bright_ega_indices]);
+
+          } else {
+            return(ega$colors[,cga_palette0_dark_ega_indices]);
+          }
+        } else { # use palette 1
+          if(bit_intensity == 1L) {
+            return(ega$colors[,cga_palette1_bright_ega_indices]);
+
+          } else {
+            return(ega$colors[,cga_palette1_dark_ega_indices]);
+          }
+        }
+      } else {
+        # the file uses the new way
+        byte_2nd_entry_green = pcxheader$ega_palette[5];
+        byte_2nd_entry_blue = pcxheader$ega_palette[6];
+        if(byte_2nd_entry_green > byte_2nd_entry_blue) {
+          if(byte_2nd_entry_green > 200) {
+            bit_intensity = 1L;
+            return(ega$colors[,cga_palette0_bright_ega_indices]);
+          } else {
+            bit_intensity = 0L;
+            return(ega$colors[,cga_palette0_dark_ega_indices]);
+          }
+        } else {
+          if(byte_2nd_entry_green > 200) {
+            bit_intensity = 1L;
+            return(ega$colors[,cga_palette1_bright_ega_indices]);
+          } else {
+            bit_intensity = 0L;
+            return(ega$colors[,cga_palette1_dark_ega_indices]);
+          }
+        }
+      }
+    }
+  } else if(gfx_mode == 'ega') {
+    if(pcxheader$paintbrush_version %in% c(0L, 3L)) {
+      palette = ega.palette.default16();
+    } else {
+      # read palette from header.
+      if(pcxheader$bitpix == 4L) {
+        palette = as.matrix(pcxheader$ega_palette[1:(16*3)], ncol=3, byrow=TRUE);
+      } else if(pcxheader$bitpix == 3L) {
+        palette = as.matrix(pcxheader$ega_palette[1:(8*3)], ncol=3, byrow=TRUE);
+      } else {
+        warning(sprintf("Cannot interprete EGA palette for image with %d bits per pixel (expected 3 or 4).\n", pcxheader$bitpix));
+        return(NULL);
+      }
+    }
+  }
+  return(palette);
+}
+
+
 #' @title S3 print function for pcx header.
 #'
 #' @param x a pcx.header instance.
@@ -227,5 +322,23 @@ print.pcx <- function(x, ...) {
   } else {
     cat(sprintf("Bits per pixel=%d, not indexed: %d different colors possible. Encoding = %s.\n", x$header$bitpix, (2 * x$header$num_channels) ** x$header$bitpix, str_encoding_type));
   }
+}
 
+
+#' @title Get default 16 colors 6-bit EGA palette.
+#'
+#' @return named list with entries (1) `info`: data.frame with entries `index`, `color_names`, and `color_code_decimal` and (2) `colors`: 16x3 integer matrix representing RGB colors, in range 0-255.
+#'
+#' @note EGA allowed one to create palettes by selecting 16 colors out of 64 possible ones. This is the default palette, see the \code{info$color_code_decimal} field to see which of the 64 colors were selected.
+ega.palette.default16 <- function() {
+  color_names = c('black', 'blue', 'green', 'cyan', 'red', 'magenta', 'yellow', 'light gray',
+                  'dark gray', 'bright blue', 'bright green', 'bright cyan', 'bright red', 'bright magenta', 'bright yellow', 'white');
+  color_code_decimal = c(0L, 1L, 2L, 3L, 4L, 5L, 20L, 7L,
+                         56L, 57L, 58L, 59L, 60L, 61L, 62L, 63L);
+  info_df = data.frame('index'=seq.int(0, 15), 'name'=color_names, 'color_code_decimal'=color_code_decimal);
+
+  col_matrix = col2rgb(c('#000000', '#0000AA', '#00AA00', '#00AAAA', '#AA0000', '#AA00AA', '#AA5500', '#AAAAAA',
+                         '#555555', '#AAAAFF', '#55FF55', '#55FFFF', '#FF55FF', '#FF5555', '#FFFF55', '#FFFFFF'));
+
+  return(list('info'=info_df, 'colors'=col_matrix));
 }
