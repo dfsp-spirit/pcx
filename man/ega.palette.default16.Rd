@@ -15,3 +15,4 @@ Get default 16 colors 6-bit EGA palette.
 \note{
 EGA allowed one to create palettes by selecting 16 colors out of 64 possible ones. This is the default palette, see the \code{info$color_code_decimal} field to see which of the 64 colors were selected.
 }
+\keyword{internal}

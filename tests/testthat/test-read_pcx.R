@@ -38,7 +38,7 @@ testthat::test_that("We can read a PCX file with a 256 color palette.", {
 })
 
 
-testthat::test_that("We can read a PCX file that is not indexed.", {
+testthat::test_that("We can read a VGA PCX file that is not indexed.", {
 
   # file from https://samples.libav.org/image-samples/pcx/
   pcxf = system.file('extdata', 'lena.pcx', package = 'pcx', mustWork = TRUE);
@@ -49,6 +49,20 @@ testthat::test_that("We can read a PCX file that is not indexed.", {
 
   testthat::expect_true(is.null(pcx$palette));
 })
+
+
+testthat::test_that("We can read a PCX file that uses a CGA palette.", {
+
+  # file from https://samples.libav.org/image-samples/pcx/cga/
+  pcxf = system.file('extdata', 'CGA_RGBI.PCX', package = 'pcx', mustWork = TRUE);
+  pcx = read.pcx(pcxf);
+
+  testthat::expect_true(is.array(pcx$colors));
+  testthat::expect_equal(dim(pcx$colors), c(200, 317));
+
+  testthat::expect_true(is.null(pcx$palette));
+})
+
 
 #' @importFrom jpeg writeJPEG
 testthat::test_that("We can convert a PCX file to JPEG format.", {

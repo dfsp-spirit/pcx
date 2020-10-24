@@ -4,14 +4,18 @@
 \alias{compute.header.palette.colors}
 \title{Compute the colors for the CGA/EGA palette from the header.}
 \usage{
-compute.header.palette.colors(pcxheader, gfx_mode = "cga", raw_data = NULL)
+compute.header.palette.colors(
+  pcxheader,
+  gfx_mode = "AUTO",
+  raw_image_data = NULL
+)
 }
 \arguments{
-\item{gfx_mode}{the graphics mode, one of 'cga', 'ega', or 'auto' to guess the mode from the data.}
+\item{pcxheader}{a PCX header instance}
 
-\item{raw_data}{the image data, optional. Can be used to check the validity of the computed palette if given.}
+\item{gfx_mode}{the graphics mode, one of 'CGA', 'EGA', or 'AUTO' to guess the mode from the data.}
 
-\item{pcheader}{a PCX header instance}
+\item{raw_image_data}{the raw image data as stored in the file, decoded (extracted from the RLE) but without further modification like application of a palette, optional. Can be used to check the validity of the computed palette if given.}
 }
 \value{
 integer matrix, the palette colors.
