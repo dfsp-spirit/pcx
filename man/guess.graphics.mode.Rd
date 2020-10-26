@@ -4,7 +4,7 @@
 \alias{guess.graphics.mode}
 \title{Guess graphics mode from header.}
 \usage{
-guess.graphics.mode(pcxheader)
+guess.graphics.mode(pcxheader, raw_image_data = NULL)
 }
 \arguments{
 \item{pcxheader}{PCX header instance}

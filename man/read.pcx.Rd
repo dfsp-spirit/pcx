@@ -21,12 +21,11 @@ Read bitmap file in PCX format.
 }
 \examples{
 \dontrun{
-   pcxf = '~/data/q2_pak/models/items/quaddama/skin.pcx';
+   pcxf = '~/data/q2_pak0_extracted/models/items/quaddama/skin.pcx';
    pcx = read.pcx(pcxf);
-   plot(imager::as.cimg(pcx$colors))
+   plot(imager::as.cimg(pcx$colors));
    # show palette:
-   plot(1:256, col=rgb(pcx$palette, maxColorValue = 255))
-
+   plot(1:256, col=rgb(pcx$palette, maxColorValue = 255));
 }
 
 }

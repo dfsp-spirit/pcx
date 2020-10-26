@@ -1,5 +1,4 @@
 
-
 #' @title Read bitmap file in PCX format.
 #'
 #' @param filepath character string, path to the file including extension
@@ -12,12 +11,11 @@
 #'
 #' @examples
 #' \dontrun{
-#'    pcxf = '~/data/q2_pak/models/items/quaddama/skin.pcx';
+#'    pcxf = '~/data/q2_pak0_extracted/models/items/quaddama/skin.pcx';
 #'    pcx = read.pcx(pcxf);
-#'    plot(imager::as.cimg(pcx$colors))
+#'    plot(imager::as.cimg(pcx$colors));
 #'    # show palette:
-#'    plot(1:256, col=rgb(pcx$palette, maxColorValue = 255))
-#'
+#'    plot(1:256, col=rgb(pcx$palette, maxColorValue = 255));
 #' }
 #'
 #' @export
@@ -34,6 +32,7 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   if(header$ident != 10L) {
     stop("File not in PCX format.");
   }
+
   header$paintbrush_version = readBin(fh, integer(), n = 1, size = 1, endian = endian);
   header$encoding_type = readBin(fh, integer(), n = 1, size = 1, endian = endian); # 0 = none, 1 = runlength enc.
   header$bitpix = readBin(fh, integer(), n = 1, size = 1, endian = endian); # bits per pixel, defines number of possible colors in image. 1 = 2, 2 = 4, 4 = 16, 8 = 256.
@@ -66,7 +65,6 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   class(header) = c(class(header), 'pcxheader');
 
   guessed_graphics_mode = guess.graphics.mode(header);
-
   img_num_pixels = img_width * img_height;
   img_num_values = img_num_pixels * header$num_channels;
   img_data = array(rep(NA, img_num_values), dim = c(img_width, img_height, header$num_channels));
@@ -87,9 +85,8 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   if(hdr_only) {
     return(header);
   }
+
   pcx$header = header;
-
-
   seek(fh, where = 128L, origin = "start");
 
   # Read and decompress color data
@@ -105,8 +102,8 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
         raw_value = readBin(fh, integer(), n = 1L, size = 1L, signed = FALSE);
         bytes_read_this_line = bytes_read_this_line + 1L;
         if(length(raw_value) < 1L) {
-          break; # last line may be shorter.
           cat(sprintf("Reached end of file, but expected more data at byte %d of %d [channel %d of %d, line %d of %d].\n", bytes_read_this_line, header$bytes_per_channels_line, j, header$num_channels, i, img_height));
+          break; # last line may be shorter.
         }
 
         if(raw_value > 192L) { # repeat
@@ -192,6 +189,111 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   pcx$data = img_data;
   class(pcx) = c(class(pcx), 'pcx');
   return(pcx);
+}
+
+
+#' @title Split each entry of 8 bit integer vector into 1, 2 or 4 bit integers.
+#'
+#' @param data_in integer vector, containing values in range 0..255L (8 bit unsigned int values).
+#'
+#' @param output_bits_per_int integer, one of 1L, 2L, 4L. The bits per output integer.
+#'
+#' @return vector of integer, the values range is smaller than the range of the 8 bit input values, and the number of values in greater.
+#'
+#' @examples
+#'     uint8split(c(255, 8, 64, 13), 4L);
+uint8split <- function(data_in, output_bits_per_int = 4L) {
+  if( ! output_bits_per_int %in% c(1L, 2L, 4L, 8L)) {
+    stop("Parameter 'output_bits_per_int' must be one of 1L, 2L, 4L, 8L.");
+  }
+  if(any(data_in > 255L) | any(data_in < 0L)) {
+    stop("Parameter 'data_in' must contain only integers which can be represented as unsigned 8 bit integers, i.e., values in range 0..255.");
+  }
+  if(output_bits_per_int == 8L) {
+    return(data_in);
+  } else {
+    if(output_bits_per_int == 1L) {
+      return(ints.to.uint1(data_in));
+    } else if(output_bits_per_int == 2L) {
+      return(ints.to.uint2(data_in));
+    } else { # 4L
+      return(ints.to.uint4(data_in));
+    }
+  }
+}
+
+
+#' @title Extract subbits from integer as unsigned int.
+#'
+#' @description Extract bits \code{start_index} to \code{stop_index} from an 8 bit integer.
+#'
+#' @param int8 integer, must be in range 0L..255L. The integer is of course stored as a 32 bit integer internally in \code{R}, but it must contain a value between \code{0} and \code{255}, the other bits are ignored.
+#'
+#' @param start_index integer in range 1L..32L, the start bit index.
+#'
+#' @param stop_index integer in range 1L..32L, the stop bit index.
+#'
+#' @return an unsigned integer, the possible range depends on the number of bits.
+#'
+#' @note Thanks to Julian_Hn at stackoverflow for this function.
+#'
+#' @examples
+#'     uint.subbits.as.uint(255L, 1, 4); # result: 15
+#'     sapply(c(1,3,5,255), uint.subbits.as.uint, 5, 8); # 0,0,0,15
+#'
+#' @keywords internal
+uint.subbits.as.uint <- function(int8, start_index, stop_index) {
+  bits = intToBits(int8);
+  res = packBits(c(bits[start_index:stop_index],
+                    rep(as.raw(0), 32-(stop_index-start_index+1))), type = "integer");
+  return(res);
+}
+
+
+#' @title Split n 8 bit unsigned integers into 2n 4 bit unsigned integers.
+#'
+#' @param int8_vec integer vector of \code{n} values, all of which must be in range 0..255L.
+#'
+#' @return \code{2n} integers in range 0..15L.
+#' @keywords internal
+ints.to.uint4 <- function(int8_vec) {
+  res_lbits = sapply(int8_vec, uint.subbits.as.uint, 1L, 4L);
+  res_rbits = sapply(int8_vec, uint.subbits.as.uint, 5L, 8L);
+  return(c(rbind(res_lbits, res_rbits)));
+}
+
+
+#' @title Split n 8 bit unsigned integers into 4n 2 bit unsigned integers.
+#'
+#' @param int8_vec integer vector of \code{n} values, all of which must be in range 0..255L.
+#'
+#' @return \code{4n} integers in range 0..3L.
+#' @keywords internal
+ints.to.uint2 <- function(int8_vec) {
+  res_bits1 = sapply(int8_vec, uint.subbits.as.uint, 1L, 2L);
+  res_bits2 = sapply(int8_vec, uint.subbits.as.uint, 3L, 4L);
+  res_bits3 = sapply(int8_vec, uint.subbits.as.uint, 5L, 6L);
+  res_bits4 = sapply(int8_vec, uint.subbits.as.uint, 7L, 8L);
+  return(c(rbind(res_bits1, res_bits2, res_bits3, res_bits4)));
+}
+
+
+#' @title Split n 8 bit unsigned integers into 8n 1 bit unsigned integers.
+#'
+#' @param int8_vec integer vector of \code{n} values, all of which must be in range 0..255L.
+#'
+#' @return \code{8n} integers in range 0..1L.
+#' @keywords internal
+ints.to.uint1 <- function(int8_vec) {
+  res_bits1 = sapply(int8_vec, uint.subbits.as.uint, 1L, 1L);
+  res_bits2 = sapply(int8_vec, uint.subbits.as.uint, 2L, 2L);
+  res_bits3 = sapply(int8_vec, uint.subbits.as.uint, 3L, 3L);
+  res_bits4 = sapply(int8_vec, uint.subbits.as.uint, 4L, 4L);
+  res_bits5 = sapply(int8_vec, uint.subbits.as.uint, 5L, 5L);
+  res_bits6 = sapply(int8_vec, uint.subbits.as.uint, 6L, 6L);
+  res_bits7 = sapply(int8_vec, uint.subbits.as.uint, 7L, 7L);
+  res_bits8 = sapply(int8_vec, uint.subbits.as.uint, 8L, 8L);
+  return(c(rbind(res_bits1, res_bits2, res_bits3, res_bits4, res_bits5, res_bits6, res_bits7, res_bits8)));
 }
 
 
@@ -365,7 +467,6 @@ print.pcx <- function(x, ...) {
     str_encoding_type = 'No';
   }
 
-
   is_indexed = is.pcx.indexed(x$header);
   num_colors_max = (2 * x$header$num_channels) ** x$header$bitpix;
   guessed_graphics_mode = guess.graphics.mode(x$header);
@@ -384,6 +485,7 @@ print.pcx <- function(x, ...) {
   }
 }
 
+
 #' @title Guess graphics mode from header.
 #'
 #' @param pcxheader PCX header instance
@@ -391,14 +493,28 @@ print.pcx <- function(x, ...) {
 #' @return one of 'CGA', 'EGA', or 'VGA'.
 #'
 #' @keywords internal
-guess.graphics.mode <- function(pcxheader) {
+guess.graphics.mode <- function(pcxheader, raw_image_data = NULL) {
   num_colors_max = (2 * pcxheader$num_channels) ** pcxheader$bitpix;
-  if(num_colors_max %in% c(2L, 4L)) {
-    guessed_graphics_mode = 'CGA';
-  } else if(num_colors_max %in% c(8L, 16L)) {
-    guessed_graphics_mode = 'EGA';
-  } else {
+
+  max_raw_image_data_value = NULL;
+  if(! is.null(raw_image_data)) {
+    max_raw_image_data_value = max(raw_image_data, na.rm = TRUE);
+  }
+
+  if(pcxheader$bitpix < 8L) {
+    if(num_colors_max %in% c(2L, 4L)) {
+      guessed_graphics_mode = 'CGA';
+    } else if(num_colors_max %in% c(8L, 16L)) {
+      guessed_graphics_mode = 'EGA';
+    } else {
+      warning(sprintf("Detected image with %d bits per pixel per channel, %d channels and %d colors max. Guessing EGA mode.\n", pcxheader$bitpix, pcxheader$num_channels, num_colors_max));
+      guessed_graphics_mode = 'EGA';
+    }
+  } else { # bitpix >= 8
     guessed_graphics_mode = 'VGA';
+    if(num_colors_max < 256L) {
+      warning(sprintf("Detected image with %d bits per pixel per channel, %d channels and %d colors max. Guessing VGA mode.\n", pcxheader$bitpix, pcxheader$num_channels, num_colors_max));
+    }
   }
   return(guessed_graphics_mode);
 }
@@ -417,10 +533,11 @@ ega.palette.default16 <- function() {
                   'dark gray', 'bright blue', 'bright green', 'bright cyan', 'bright red', 'bright magenta', 'bright yellow', 'white');
   color_code_decimal = c(0L, 1L, 2L, 3L, 4L, 5L, 20L, 7L,
                          56L, 57L, 58L, 59L, 60L, 61L, 62L, 63L);
-  info_df = data.frame('index'=seq.int(0, 15), 'name'=color_names, 'color_code_decimal'=color_code_decimal);
+  info_df = data.frame('index' = seq.int(0, 15), 'name' = color_names, 'color_code_decimal' = color_code_decimal);
 
   col_matrix = grDevices::col2rgb(c('#000000', '#0000AA', '#00AA00', '#00AAAA', '#AA0000', '#AA00AA', '#AA5500', '#AAAAAA',
                          '#555555', '#AAAAFF', '#55FF55', '#55FFFF', '#FF55FF', '#FF5555', '#FFFF55', '#FFFFFF'));
 
-  return(list('info'=info_df, 'colors'=col_matrix));
+  return(list('info' = info_df, 'colors' = col_matrix));
 }
+
