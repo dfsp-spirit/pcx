@@ -182,7 +182,6 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
     if(! is.null(palette)) {
       pcx$colors = matrix(palette[drop(img_data_bitpix)], nrow = pcx$header$height, byrow = TRUE);
     }
-
   }
 
   if(! is_indexed) {
@@ -218,7 +217,6 @@ uint8split <- function(data_in, output_bits_per_int = 4L) {
   if((any(data_in > 255L) | any(data_in < 0L))) {
     stop("Parameter 'data_in' must contain only integers which can be represented as unsigned 8 bit integers, i.e., values in range 0..255.");
   }
-  #cat(sprintf("FU\n"))
   if(output_bits_per_int == 8L) {
     return(data_in);
   } else {
@@ -458,7 +456,7 @@ plot.pcx <- function(x, ...) {
 }
 
 
-#' @title Determine from PCX header whether the image is indexes, i.e., whether it uses a fixed palette.
+#' @title Determine from PCX header whether the image is indexed, i.e., whether it uses a fixed palette.
 #'
 #' @param pcxheader a PCX header instance
 #'
