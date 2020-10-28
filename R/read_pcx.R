@@ -90,6 +90,9 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   seek(fh, where = 128L, origin = "start");
 
   num_zero_repeats_total = 0L;
+  num_skipped_padding_total = 0L;
+  num_bytes_read_per_line = c();
+  num_bytes_expanded_per_line = c();
 
   # Read and decompress color data
   for(i in 1:img_height) {
@@ -149,8 +152,13 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
 
         #cat(sprintf("row_pixel_index=%d, bytes_read_this_line=%d, bytes_expanded_this_line=%d.\n", row_pixel_index, bytes_read_this_line, bytes_expanded_this_line));
       }
+      num_skipped_padding_total = num_skipped_padding_total + num_skipped_padding;
+      num_bytes_read_per_line = c(num_bytes_read_per_line, bytes_read_this_line);
+      num_bytes_expanded_per_line = c(num_bytes_expanded_per_line, bytes_expanded_this_line);
     }
   }
+
+  pcx$header$debug = list("num_skipped_padding_total"=num_skipped_padding_total, 'num_bytes_read_per_line'=num_bytes_read_per_line, 'num_bytes_expanded_per_line'=num_bytes_expanded_per_line, 'num_zero_repeats_total'=num_zero_repeats_total);
 
   is_indexed = is.pcx.indexed(pcx$header);
   guessed_graphics_mode = guess.graphics.mode(pcx$header);
