@@ -16,6 +16,7 @@ Suggests:
     knitr,
     rmarkdown,
     testthat (>= 2.1.0),
-    jpeg
+    jpeg,
+    imager
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1

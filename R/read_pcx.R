@@ -89,6 +89,8 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   pcx$header = header;
   seek(fh, where = 128L, origin = "start");
 
+  num_zero_repeats_total = 0L;
+
   # Read and decompress color data
   for(i in 1:img_height) {
     #cat(sprintf("Scanning image line %d of %d.\n", i, img_height));
@@ -97,6 +99,7 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
       row_pixel_index = 1L;
       bytes_read_this_line = 0L;
       bytes_expanded_this_line = 0L;
+      num_skipped_padding = 0L;
       while(bytes_expanded_this_line < header$bytes_per_channels_line) {
         #cat(sprintf(" *   Scanning byte %d of %d [channel %d of %d, line %d of %d].\n", (bytes_read_this_line+1L), header$bytes_per_channels_line, j, header$num_channels, i, img_height));
         raw_value = readBin(fh, integer(), n = 1L, size = 1L, signed = FALSE);
@@ -127,14 +130,20 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
                   row_pixel_index = row_pixel_index + 1L;
                 }
               }
+            } else {
+              num_zero_repeats_total = num_zero_repeats_total + 1L;
             }
+          } else {
+            num_skipped_padding = num_skipped_padding + repeat_times;
           }
         } else { # low value: direct color
           if(row_pixel_index <= img_width) { # in image data
             #cat(sprintf("line %d, channel %d: *    - Set 1 pixel (#%d of %d) to %d. [byte %d of %d per channel]\n", i, j, row_pixel_index, img_width, raw_value, k, header$bytes_per_channels_line));
             img_data[row_pixel_index, i, j] = raw_value;
+            row_pixel_index = row_pixel_index + 1L;
+          } else {
+            num_skipped_padding = num_skipped_padding + 1L;
           }
-          row_pixel_index = row_pixel_index + 1L;
           bytes_expanded_this_line = bytes_expanded_this_line + 1L;
         }
 
@@ -147,7 +156,8 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   guessed_graphics_mode = guess.graphics.mode(pcx$header);
 
   # The img_data is decoded, but read as 1-byte integers. We need to honor bitpix to get the correct values.
-  img_data_bitpix = uint8split(img_data, output_bits_per_int = pcx$header$bitpix);
+  img_data_bitpix = img_data;
+  #img_data_bitpix = uint8split(img_data, output_bits_per_int = pcx$header$bitpix);
 
   # check for VGA palette at end of file
   if(is_indexed & guessed_graphics_mode == 'VGA') {
@@ -338,9 +348,10 @@ print.pcxheader <- function(x, ...) {
 #' @param ... extra args, not used.
 #'
 #' @export
+#' @importFrom graphics plot
 plot.pcx <- function(x, ...) {
   if(requireNamespace('imager', quietly = TRUE)) {
-    plot(imager::as.cimg(x$colors));
+    graphics::plot(imager::as.cimg(x$colors));
   } else {
     stop("The 'imager' package must be installed to plot PCX images.");
   }

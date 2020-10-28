@@ -2,7 +2,7 @@
 % Please edit documentation in R/read_pcx.R
 \name{is.pcx.indexed}
 \alias{is.pcx.indexed}
-\title{Determine from PCX header whether the image is indexes, i.e., whether it uses a fixed palette.}
+\title{Determine from PCX header whether the image is indexed, i.e., whether it uses a fixed palette.}
 \usage{
 is.pcx.indexed(pcxheader)
 }
@@ -13,6 +13,6 @@ is.pcx.indexed(pcxheader)
 logical, whether the image is indexed.
 }
 \description{
-Determine from PCX header whether the image is indexes, i.e., whether it uses a fixed palette.
+Determine from PCX header whether the image is indexed, i.e., whether it uses a fixed palette.
 }
 \keyword{internal}

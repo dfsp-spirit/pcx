@@ -8,9 +8,6 @@
 #'
 #' @return vector of integer, the values range is smaller than the range of the 8 bit input values, and the number of values in greater.
 #'
-#' @examples
-#'     uint8split(c(255, 8, 64, 13), 4L);
-#'
 #' @keywords internal
 uint8split <- function(data_in, output_bits_per_int = 4L) {
   if( ! output_bits_per_int %in% c(1L, 2L, 4L, 8L)) {
@@ -50,10 +47,6 @@ uint8split <- function(data_in, output_bits_per_int = 4L) {
 #' @return an unsigned integer, the possible range depends on the number of bits.
 #'
 #' @note Thanks to Julian_Hn at stackoverflow for this function.
-#'
-#' @examples
-#'     uint.subbits.as.uint(255L, 1, 4); # result: 15
-#'     sapply(c(1,3,5,255), uint.subbits.as.uint, 5, 8); # 0,0,0,15
 #'
 #' @keywords internal
 uint.subbits.as.uint <- function(int8, start_index, stop_index) {
