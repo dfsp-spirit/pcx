@@ -19,4 +19,6 @@ Split each entry of 8 bit integer vector into 1, 2 or 4 bit integers.
 }
 \examples{
     uint8split(c(255, 8, 64, 13), 4L);
+
 }
+\keyword{internal}

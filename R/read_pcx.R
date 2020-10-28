@@ -146,6 +146,9 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   is_indexed = is.pcx.indexed(pcx$header);
   guessed_graphics_mode = guess.graphics.mode(pcx$header);
 
+  # The img_data is decoded, but read as 1-byte integers. We need to honor bitpix to get the correct values.
+  img_data_bitpix = uint8split(img_data, output_bits_per_int = pcx$header$bitpix);
+
   # check for VGA palette at end of file
   if(is_indexed & guessed_graphics_mode == 'VGA') {
     seek(fh, where = -(768L +1L), origin = "end");
@@ -164,7 +167,7 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
       # apply palette
       #if(dim(img_data)[3] == 1L) {
         # only 1 channel, use palette.
-        pcx$colors = matrix(pcx$palette_rgb[drop(img_data)], nrow = pcx$header$height, byrow = TRUE);
+        pcx$colors = matrix(pcx$palette_rgb[drop(img_data_bitpix)], nrow = pcx$header$height, byrow = TRUE);
       #}
     } else {
       pcx$header$has_palette_at_end = FALSE;
@@ -177,13 +180,13 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
 
     palette = compute.header.palette.colors(pcx$header, gfx_mode = guessed_graphics_mode, raw_image_data = img_data);
     if(! is.null(palette)) {
-      pcx$colors = matrix(palette[drop(img_data)], nrow = pcx$header$height, byrow = TRUE);
+      pcx$colors = matrix(palette[drop(img_data_bitpix)], nrow = pcx$header$height, byrow = TRUE);
     }
 
   }
 
   if(! is_indexed) {
-    pcx$colors = img_data;
+    pcx$colors = img_data_bitpix;
   }
 
   pcx$data = img_data;
@@ -202,13 +205,20 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
 #'
 #' @examples
 #'     uint8split(c(255, 8, 64, 13), 4L);
+#'
+#' @keywords internal
 uint8split <- function(data_in, output_bits_per_int = 4L) {
   if( ! output_bits_per_int %in% c(1L, 2L, 4L, 8L)) {
     stop("Parameter 'output_bits_per_int' must be one of 1L, 2L, 4L, 8L.");
   }
-  if(any(data_in > 255L) | any(data_in < 0L)) {
+  #cat(sprintf("bitpix=%d\n", output_bits_per_int));
+  #print(dim(data_in))
+  #print(data_in)
+  #print(which(is.na(data_in)))
+  if((any(data_in > 255L) | any(data_in < 0L))) {
     stop("Parameter 'data_in' must contain only integers which can be represented as unsigned 8 bit integers, i.e., values in range 0..255.");
   }
+  #cat(sprintf("FU\n"))
   if(output_bits_per_int == 8L) {
     return(data_in);
   } else {
@@ -429,6 +439,22 @@ print.pcxheader <- function(x, ...) {
   pcx = list('data' = NULL, 'header'=x);
   class(pcx) = c(class(pcx), 'pcx');
   print(pcx);
+}
+
+
+#' @title S3 plot function for pcx image.
+#'
+#' @param x a pcx instance.
+#'
+#' @param ... extra args, not used.
+#'
+#' @export
+plot.pcx <- function(x, ...) {
+  if(requireNamespace('imager', quietly = TRUE)) {
+    plot(imager::as.cimg(x$colors));
+  } else {
+    stop("The 'imager' package must be installed to plot PCX images.");
+  }
 }
 
 
