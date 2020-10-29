@@ -131,6 +131,8 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
                   #cat(sprintf(" *    - In Repeat: Set %d pixels to %d.\n", repeat_times, repeat_color));
                   img_data[row_pixel_index, i, j] = repeat_color;
                   row_pixel_index = row_pixel_index + 1L;
+                } else {
+                  num_skipped_padding = num_skipped_padding + 1L;
                 }
               }
             } else {
@@ -196,7 +198,7 @@ read.pcx <- function(filepath, hdr = TRUE, hdr_only = FALSE) {
   if(is_indexed & guessed_graphics_mode %in% c('CGA', 'EGA')) {
     cat(sprintf("Computing header CGA/EGA palette for indexed non-VGA image (guessed: %s).\n", guessed_graphics_mode));
 
-    palette = compute.header.palette.colors(pcx$header, gfx_mode = guessed_graphics_mode, raw_image_data = img_data);
+    palette = compute.header.palette.colors(pcx$header, gfx_mode = guessed_graphics_mode, raw_image_data = img_data_bitpix);
     if(! is.null(palette)) {
       pcx$colors = matrix(palette[drop(img_data_bitpix)], nrow = pcx$header$height, byrow = TRUE);
     }
