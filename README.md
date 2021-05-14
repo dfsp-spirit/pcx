@@ -54,4 +54,9 @@ However, if you know the PCX specs well and feel confident enough that the inter
 
 ## Unit tests and CI
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/dfsp-spirit/pcx/workflows/R-CMD-check/badge.svg)](https://github.com/dfsp-spirit/pcx/actions)
+
 [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/dfsp-spirit/pcx?branch=master&svg=true)](https://ci.appveyor.com/project/dfsp-spirit/pcx) AppVeyor CI under Windows
+<!-- badges: end -->
+

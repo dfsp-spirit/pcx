@@ -1,4 +1,4 @@
-# subbit manipulation functions
+# subbyte manipulation functions
 
 #' @title Split each entry of 8 bit integer vector into 1, 2 or 4 bit integers.
 #'

@@ -12,3 +12,4 @@ CHANGES
 appveyor\.yml
 ^appveyor\.yml$
 
+^\.github$
