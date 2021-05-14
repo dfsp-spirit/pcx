@@ -54,6 +54,4 @@ However, if you know the PCX specs well and feel confident enough that the inter
 
 ## Unit tests and CI
 
-[![Build Status](https://travis-ci.org/dfsp-spirit/pcx.svg?branch=master)](https://travis-ci.org/dfsp-spirit/pcx) Travis CI under Linux
-
 [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/dfsp-spirit/pcx?branch=master&svg=true)](https://ci.appveyor.com/project/dfsp-spirit/pcx) AppVeyor CI under Windows
