@@ -5,6 +5,10 @@ Read pcx bitmap image files in R.
 
 The PCX (Picture Exchange) format is an old bitmap image format that is compressed using runlength encoding and typically indexed, i.e. used with a fixed palette. It was used together with the WAL format for parts of the assets (skybox textures, model skins, UI pictures, sprites) in the early Quake series games (id tech1 and tech2 engines).
 
+## Installation
+
+This is still work in progress. You are of course free to try it, the best way is `devtools::install_github("dfsp-spirit/pcx")`.
+
 ## Package API
 
 This is work in progress, but here is the current state:
