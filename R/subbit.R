@@ -6,12 +6,15 @@
 #'
 #' @param output_bits_per_int integer, one of 1L, 2L, 4L. The bits per output integer.
 #'
-#' @return vector of integer, the values range is smaller than the range of the 8 bit input values, and the number of values in greater.
+#' @return vector of integer, the values range is smaller than the range of the 8 bit input values, and the number of values is greater.
 #'
 #' @keywords internal
 uint8split <- function(data_in, output_bits_per_int = 4L) {
   if( ! output_bits_per_int %in% c(1L, 2L, 4L, 8L)) {
     stop("Parameter 'output_bits_per_int' must be one of 1L, 2L, 4L, 8L.");
+  }
+  if(length(data_in) < 1L) {
+    stop("Parameter 'data_in' must not contain empty vector.");
   }
   #cat(sprintf("bitpix=%d\n", output_bits_per_int));
   #print(dim(data_in))
