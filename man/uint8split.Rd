@@ -12,7 +12,7 @@ uint8split(data_in, output_bits_per_int = 4L)
 \item{output_bits_per_int}{integer, one of 1L, 2L, 4L. The bits per output integer.}
 }
 \value{
-vector of integer, the values range is smaller than the range of the 8 bit input values, and the number of values in greater.
+vector of integer, the values range is smaller than the range of the 8 bit input values, and the number of values is greater.
 }
 \description{
 Split each entry of 8 bit integer vector into 1, 2 or 4 bit integers.
