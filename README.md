@@ -7,7 +7,7 @@ The PCX (Picture Exchange) format is an old bitmap image format that is compress
 
 ## Installation
 
-This is still work in progress. You are of course free to try it, the best way is `devtools::install_github("dfsp-spirit/pcx")`.
+**This is still work in progress.** You are of course free to try it, the best way is `devtools::install_github("dfsp-spirit/pcx")`.
 
 ## Package API
 
